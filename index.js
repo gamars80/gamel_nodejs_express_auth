@@ -7,6 +7,7 @@ app.use(express.json());
 
 const port = 8080;
 const secretText = 'superSecret';
+const refreshSecretText = 'superRefreshSecret'
 const posts = [
     {
         username: 'ddd',
@@ -18,6 +19,8 @@ const posts = [
     }
 ]
 
+let refreshTokens = [];
+
 app.post('/login', (req, res) => {
     const userName = req.body.userName;
     const user = {
@@ -25,7 +28,22 @@ app.post('/login', (req, res) => {
     }
 
     //jwt 토큰 생성하기 payload + secret text
-    const accessToken = jwt.sign(user, secretText);
+    //유효 기간 추가
+    const accessToken = jwt.sign(user, secretText, {expiresIn: '30s'});
+
+    //jwt를 이용해 리프레쉬 토큰 생성
+    const refreshToken = jwt.sign(user, refreshSecretText, {expiresIn: '1d'});
+
+
+    //리프레쉬 토큰은 원래같으면 db에 저장하겠지만 일단 배열에 푸시한다
+    refreshTokens.push(refreshToken);
+
+    //리프레쉬 토큰을 쿠키에 넣어주기
+    res.cookie('jwt',refreshToken, {
+        httpOnly: true, //javascript 탈취를 막기위한,
+        maxAge: 24 * 60 * 60 * 1000
+    })
+
     res.json({accessToken: accessToken});
 
 })
