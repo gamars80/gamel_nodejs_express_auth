@@ -72,7 +72,7 @@ function authMiddleware(req, res, next) {
 }
 
 app.get('/refresh', (req, res) => {
-    console.log('req.cookies', req.cookies);
+    // console.log('req.cookies', req.cookies);
     //cookies 가져오기 cookie-parser
     const cookies = req.cookies;
     if(!cookies?.jwt) return res.sendStatus(403);
