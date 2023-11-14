@@ -1,9 +1,11 @@
+const cookieParser = require('cookie-parser');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 const port = 8080;
 const secretText = 'superSecret';
@@ -68,6 +70,28 @@ function authMiddleware(req, res, next) {
         next();
     })
 }
+
+app.get('/refresh', (req, res) => {
+    console.log('req.cookies', req.cookies);
+    //cookies 가져오기 cookie-parser
+    const cookies = req.cookies;
+    if(!cookies?.jwt) return res.sendStatus(403);
+
+    const refreshToken = cookies.jwt;
+    // 해당 리프레쉬 토큰이 db에 저장되어 있는지 체크 하지만 일단 db가 없으니 위에 담은 배열에 포함되어 있는지로 대체
+    if(!refreshTokens.includes(refreshToken)){
+        res.sendStatus(403);
+    }
+
+    //토큰이 유효한지 체크
+    jwt.verify(refreshToken, refreshSecretText, (err, user) => {
+        if(err) return res.sendStatus(403);
+        // 유효하니 새로운 어세스 토큰 생성
+        const accessToken = jwt.sign({name: user.name}, secretText, {expiresIn: '30s'});
+
+        res.json({accessToken});
+    })
+})
 
 app.listen(port, () => {
     console.log('Listening on port'+port);
